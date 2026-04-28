@@ -11,6 +11,9 @@ const nodemailer = require("nodemailer");
 const session    = require("express-session");
 
 const app = express();
+console.log("DB_HOST:", process.env.DB_HOST);
+console.log("MYSQL_URL:", process.env.MYSQL_URL ? "definido" : "indefinido");
+
 
 const EMAIL_CONFIG = {
     host:   process.env.EMAIL_HOST || "smtp.gmail.com",
