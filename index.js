@@ -9,6 +9,7 @@ const fs           = require("fs");
 const path         = require("path");
 const nodemailer   = require("nodemailer");
 const session      = require("express-session");
+const MySQLStore   = require("express-mysql-session")(session);
 const jwt          = require("jsonwebtoken");
 
 const app = express();
@@ -53,10 +54,18 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+const sessionStore = new MySQLStore({
+  host:     process.env.MYSQLHOST     || process.env.DB_HOST     || "127.0.0.1",
+  port:     parseInt(process.env.MYSQLPORT || process.env.DB_PORT || "3306"),
+  user:     process.env.MYSQLUSER     || process.env.DB_USER     || "root",
+  password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || "",
+  database: process.env.MYSQLDATABASE || process.env.DB_NAME     || "lifeup"
+});
 app.use(session({
   secret: process.env.SESSION_SECRET || "lifeup_secret_key",
   resave: false,
   saveUninitialized: false,
+  store: sessionStore,
   cookie: { secure: false, maxAge: 5 * 60 * 1000 }
 }));
 
@@ -74,17 +83,19 @@ function parseMySQL(url) {
   };
 }
 
-const con = process.env.MYSQL_URL
-  ? mysql.createPool(parseMySQL(process.env.MYSQL_URL))
-  : mysql.createPool({
-      host:     process.env.DB_HOST     || "127.0.0.1",
-      port:     parseInt(process.env.DB_PORT || "3306"),
-      user:     process.env.DB_USER     || "root",
-      password: process.env.DB_PASSWORD || "",
-      database: process.env.DB_NAME     || "lifeup",
+const dbConfig = process.env.MYSQL_URL
+  ? parseMySQL(process.env.MYSQL_URL)
+  : {
+      host:     process.env.MYSQLHOST     || process.env.DB_HOST     || "127.0.0.1",
+      port:     parseInt(process.env.MYSQLPORT || process.env.DB_PORT || "3306"),
+      user:     process.env.MYSQLUSER     || process.env.DB_USER     || "root",
+      password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || "",
+      database: process.env.MYSQLDATABASE || process.env.DB_NAME     || "lifeup",
       waitForConnections: true,
       connectionLimit: 10
-    });
+    };
+
+const con = mysql.createPool(dbConfig);
 
 con.getConnection((err, connection) => {
   if (err) {
