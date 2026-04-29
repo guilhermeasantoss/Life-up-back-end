@@ -73,7 +73,7 @@ const con = process.env.MYSQL_URL
 con.getConnection((err, connection) => {
     if (err) { console.error("Erro no banco:", err.message); return; }
     console.log("Conectado ao banco LifeUP!");
-    connection.query("ALTER TABLE clientes ADD COLUMN IF NOT EXISTS apple_id VARCHAR(100) NULL UNIQUE", (e) => {
+    connection.query("ALTER TABLE clientes ADD COLUMN apple_id VARCHAR(100) NULL UNIQUE", (e) => {
         if (e && !e.message.includes("Duplicate")) console.error("apple_id:", e.message);
     });
     connection.release();
